@@ -8,15 +8,19 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 
 # Copia el archivo de proyecto y restaura dependencias
-COPY ["NetCoreApi.csproj", "./"]
-RUN dotnet restore "./NetCoreApi/NetCoreApi.csproj"
+COPY ["NetCoreApi/NetCoreApi.csproj", "NetCoreApi/"]
+WORKDIR "/src/NetCoreApi"
+RUN dotnet restore "NetCoreApi.csproj"
 
-# Copia el código fuente y compílalo
+# Copia el resto del código fuente y compílalo
 COPY . .
-RUN dotnet publish "./NetCoreApi/NetCoreApi.csproj" -c Release -o /app/publish
+WORKDIR "/src/NetCoreApi"
+RUN dotnet publish "NetCoreApi.csproj" -c Release -o /app/publish
 
 # Usa la imagen base y copia los archivos compilados
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
+
+# Define el comando de inicio
 CMD ["dotnet", "NetCoreApi.dll"]
